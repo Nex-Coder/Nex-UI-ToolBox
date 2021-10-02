@@ -21,3 +21,40 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# Gradle
+gradle-local.properties
+gpg/
+.gradle/
+build/
+*.settings.xml
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# IDEA
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
+_ignore*
+
+# VS Code
+.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Local History for VS Code
+.history/
+/gradle/
+/Client/data/
+/Server/data/
+/Server/test/*

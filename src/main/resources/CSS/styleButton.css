@@ -1,0 +1,11 @@
+.NexStyleButton {
+    -fx-alignment: CENTER;
+    -fx-button-type: RAISED;
+    -fx-text-alignment: CENTER;
+    -fx-text-fill: WHITE;
+    -fx-wrap-text: true;
+}
+
+.NexStyleButton .ripple-generator {
+    -fx-ripplerFill: #ff000080;
+}
