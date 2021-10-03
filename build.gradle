@@ -44,6 +44,21 @@ def projectAppDescription = 'A client for the OpenRAMT server edition.'
 //def projectPreRelease = true // will be intend for preReleaseVersions macos
 
 /*---- Tasks ----*/
+tasks.register('uberJar', Jar) {
+    archiveClassifier = 'uber'
+
+    from sourceSets.main.output
+
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
+}
+
+rootProject.tasks.named("uberJar") {
+    duplicatesStrategy = 'include'
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -89,13 +104,13 @@ application {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(16))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
 javafx {
     modules = ['javafx.controls', 'javafx.fxml']
-    version = '16'
+    version = '17'
 }
 
 run { jvmArgs = projectJvmArgs }

@@ -21,6 +21,7 @@ class Launcher {
     public static class MainStart extends Application {
         @Override
         public void start(Stage stage)  {
+            // look into tray stuff https://github.com/dustinkredmond/FXTrayIcon
         }
     }
 
