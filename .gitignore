@@ -28,6 +28,7 @@ gpg/
 .gradle/
 build/
 *.settings.xml
+/gradle/gradle-wrapper.jar
 
 # Eclipse
 .classpath
@@ -54,7 +55,3 @@ _ignore*
 
 # Local History for VS Code
 .history/
-/gradle/
-/Client/data/
-/Server/data/
-/Server/test/*

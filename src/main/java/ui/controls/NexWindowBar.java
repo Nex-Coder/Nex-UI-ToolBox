@@ -1,5 +1,6 @@
 package ui.controls;
 
+import javafx.scene.control.Control;
 import lib.interfaces.StageReturnable;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import io.github.palexdev.materialfx.controls.MFXProgressBar;
@@ -21,7 +22,7 @@ import javafx.stage.Window;
 /**
  * The Top bar controller. Handles all tasks relating to the Top bar.
  */
-public class NexWindowBar extends AnchorPane {
+public class NexWindowBar extends Control {
     // Fields
     private Window stage; // Most cases this can be hard coded. But if a user changes the scene this will continue to work.
     private double xOffset = 0;
@@ -118,7 +119,7 @@ public class NexWindowBar extends AnchorPane {
         }
     };
     private final EventHandler<MouseEvent> helpEvent = e -> {
-        if (helpStage == null ) {
+        if (helpStage == null) {
             helpMissing.close();
             helpMissing.show();
         } else if (!helpStage.isReturned()) {
@@ -129,23 +130,11 @@ public class NexWindowBar extends AnchorPane {
 
     // Constructors
     public NexWindowBar() {
-        setUserExitable(true);
-        setUserMaxable(true);
-        setUserMinable(true);
-        setUserMoveable(true);
-
-        nexBuilder();
+        this(true, true, true, false, true);
     }
 
-    public NexWindowBar(boolean isExitable, boolean isMaxable, boolean isMinable, boolean isProgressable, boolean isHelpable, boolean  isMovable) {
-        setUserExitable(isExitable);
-        setUserMaxable(isMaxable);
-        setUserMinable(isMinable);
-        setUserProgressable(isProgressable);
-        setUserHelpable(isHelpable);
-        setUserMoveable(isMovable);
-
-        nexBuilder();
+    public NexWindowBar(boolean isExitable, boolean isMaxable, boolean isMinable, boolean isProgressable, boolean  isMovable) {
+        this(isExitable, isMaxable, isMinable, isProgressable, false, isMovable, null);
     }
 
     public NexWindowBar(boolean isExitable, boolean isMaxable, boolean isMinable, boolean isProgressable, boolean isHelpable, boolean  isMovable, StageReturnable<?> helpStage) {
@@ -155,7 +144,6 @@ public class NexWindowBar extends AnchorPane {
         setUserProgressable(isProgressable);
         setUserHelpable(isHelpable);
         setUserMoveable(isMovable);
-
         this.helpStage = helpStage;
 
         nexBuilder();
