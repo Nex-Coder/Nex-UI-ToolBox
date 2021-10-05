@@ -1,6 +1,11 @@
 package ui.controls;
 
-import javafx.scene.control.Control;
+import javafx.beans.property.ReadOnlyMapProperty;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.control.skin.ButtonBarSkin;
+import javafx.scene.control.skin.ButtonSkin;
 import lib.interfaces.StageReturnable;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import io.github.palexdev.materialfx.controls.MFXProgressBar;
@@ -10,20 +15,28 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import ui.skins.NexWindowBarSkin;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * The Top bar controller. Handles all tasks relating to the Top bar.
  */
 public class NexWindowBar extends Control {
+
+
     // Fields
+    private final AnchorPane layout = new AnchorPane();
+
     private Window stage; // Most cases this can be hard coded. But if a user changes the scene this will continue to work.
     private double xOffset = 0;
     private double yOffset = 0;
@@ -40,7 +53,7 @@ public class NexWindowBar extends Control {
     private final BooleanProperty isMaximisedProperty = new SimpleBooleanProperty(false);
 
     private ShutdownMethod shutdownMethod = ShutdownMethod.APPLICATION;
-    private MinimiseMethod minimiseMethod = MinimiseMethod.ICON;
+    private final MinimiseMethod minimiseMethod = MinimiseMethod.ICON;
 
     // Optionals
     private final MFXButton btnHelp  = new MFXButton(), btnMax  = new MFXButton();
@@ -146,7 +159,17 @@ public class NexWindowBar extends Control {
         setUserMoveable(isMovable);
         this.helpStage = helpStage;
 
-        nexBuilder();
+        updateControls(isExitable, isMaxable, isMinable, isProgressable, isHelpable, isMovable);
+        //nexBuilder();
+    }
+
+    private void updateControls(boolean isExitable, boolean isMaxable, boolean isMinable, boolean isProgressable, boolean isHelpable, boolean  isMovable) {
+        setUserMoveable(isMovable);
+        setUserMaxable(isMaxable);
+        setUserHelpable(isHelpable);
+        setUserMinable(isMinable);
+        setUserExitable(isExitable);
+        setUserProgressable(isProgressable);
     }
 
     /**
@@ -298,6 +321,7 @@ public class NexWindowBar extends Control {
      */
     public void setHelpStage(StageReturnable<?> helpStage) {
         this.helpStage = helpStage;
+
     }
 
     /*/**
@@ -386,8 +410,9 @@ public class NexWindowBar extends Control {
 
     /**
      * Sets up some controls and styles things not styled from CSS. I.e. because they can't be.
+     * @return
      */
-    private void nexBuilder() {
+   /* protected void nexBuilder() {
         this.getStyleClass().add("NexWindowBar");
         this.getStylesheets().add("/CSS/windowBar.css");
 
@@ -440,7 +465,9 @@ public class NexWindowBar extends Control {
         AnchorPane.setBottomAnchor(btnExit, 0d);
         AnchorPane.setRightAnchor(btnExit, 0d);
         AnchorPane.setTopAnchor(btnExit, 0d);
-    }
+
+        super.getChildren().add(root);
+    }*/
 
     /**
      * There are 3 configured ways of exiting:
@@ -458,6 +485,39 @@ public class NexWindowBar extends Control {
         ICON,
         TRAY,
         THEABISWHERENOTHINGRETURNSFROM
+    }
+
+    public MFXButton getButtonMin() {
+        return btnMin;
+    }
+
+    public MFXButton getButtonMax() {
+        return btnMax;
+    }
+
+    public MFXButton getButtonExit() {
+        return btnExit;
+    }
+
+    public MFXButton getButtonHelp() {
+        return btnHelp;
+    }
+
+    public MFXProgressBar getProgressBar() {
+        return progressBar;
+    }
+
+    public Label getProgressState() {
+        return progressState;
+    }
+
+    @Override
+    protected final ObservableList<Node> getChildren() {
+        return layout.getChildren();
+    }
+
+    @Override protected Skin<?> createDefaultSkin() {
+        return new NexWindowBarSkin(this) {};
     }
 }
 
