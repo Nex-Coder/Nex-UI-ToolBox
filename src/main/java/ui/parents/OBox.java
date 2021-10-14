@@ -19,7 +19,7 @@ import java.util.function.Function;
 import static javafx.geometry.Orientation.*;
 
 /**
- * <b>OBox</b> is a hybrid version of VBox and HBox which will layout its children depending on current properties either
+ * <b>OBox</b> is a hybrid version of VBox and HBox which will lay out its children depending on current properties either
  * {@code VERTICAL} or {@code HORIZONTAL}. This can be done automatically (depending on the respective property & the
  * current width to height ratio of the layout area) or programmatically/manually.
  * <br><br>
@@ -46,10 +46,10 @@ public class OBox extends Pane {
 
     /**
      * This property object represents the {@code orientation} of the layout pane. Depending on the value the property
-     * reflects will depends on which way the children are laid out within the pane.
+     * reflects will depend on which way the children are laid out within the pane.
      * <br><br>
-     * For a orientation value of {@code HORIZONTAL} will set <i>layoutChildren</i> to orientate everything identically
-     * to how {@link javafx.scene.layout.HBox} would layout its children. oppositely, a orientation value of
+     * For an orientation value of {@code HORIZONTAL} will set <i>layoutChildren</i> to orientate everything identically
+     * to how {@link javafx.scene.layout.HBox} would lay out its children. oppositely, an orientation value of
      * {@code VERTICAL} wll instead layout its children identically to {@link javafx.scene.layout.VBox}.
      * <br><br>
      * This property can be changed automatically depending on the current width to height ratio at layout with the true
@@ -99,7 +99,7 @@ public class OBox extends Pane {
      *     <li>Current Width = Current Height - The orientation will be not changed and instead will be maintained.</li>
      * </ul>
      *
-     * Otherwise when this property reflects {@code false}, the orientation will reflect what has been programmatically/
+     * Otherwise, when this property reflects {@code false}, the orientation will reflect what has been programmatically/
      * manually set.
      * @return {@code True} for when autoOrientate is <i>enabled</i> for otherwise {@code False}.
      */
@@ -162,12 +162,33 @@ public class OBox extends Pane {
 
     /**
      * Creates a {@code OBox} (Orientation Box) layout with an initial spacing & set of children set/added.
+     * @param orientation The initial orientation. Only useful when VERTICAL is not desired.
+     */
+    public OBox(Orientation orientation) {
+        this();
+        setOrientation(orientation);
+    }
+
+    /**
+     * Creates a {@code OBox} (Orientation Box) layout with an initial spacing & set of children set/added.
      * @param spacing The initial spacing value for both VSpacing and HSpacing.
      * @param children The initial children to add.
      */
     public OBox(double spacing, Node... children) {
         this(children);
         setSpacing(spacing);
+    }
+
+    /**
+     * Creates a {@code OBox} (Orientation Box) layout with an initial spacing & set of children set/added.
+     * @param spacing The initial spacing value for both VSpacing and HSpacing.
+     * @param orientation The initial orientation. Only useful when VERTICAL is not desired.
+     * @param children The initial children to add.
+     */
+    public OBox(double spacing, Orientation orientation, Node... children) {
+        this(children);
+        setSpacing(spacing);
+        setOrientation(orientation);
     }
 
     /*================================================================================================================*\
@@ -226,7 +247,7 @@ public class OBox extends Pane {
                 x += actualAreaWidths[0][i] + space;
             }
         } else {
-            double space = snapSpaceX(getVSpacing());
+            double space = snapSpaceY(getVSpacing());
             boolean isFillWidth = isFillWidth();
 
             double contentWidth = width - left - right;
@@ -298,27 +319,35 @@ public class OBox extends Pane {
     private final Callback<Node, Insets> marginAccessor = this::getMargin;
 
     private double[][] getAreaWidths(List<Node> managed, double height) {
-        double[][] temp = getTempArray(managed.size());
+        double[][] tempW = getTempArray(managed.size(), true);
         final double insideHeight = height == -1? -1 : height -
                 snapSpaceY(getInsets().getTop()) - snapSpaceY(getInsets().getBottom());
         final boolean shouldFillHeight = shouldFillHeight();
         for (int i = 0, size = managed.size(); i < size; i++) {
             Node child = managed.get(i);
             Insets margin = getMargin(child);
-            temp[0][i] = computeChildPrefAreaWidth(child, getPrefBaselineComplement(), margin, insideHeight, shouldFillHeight);
+            tempW[0][i] = computeChildPrefAreaWidth(child, getPrefBaselineComplement(), margin, insideHeight, shouldFillHeight);
         }
-        return temp;
+        return tempW;
     }
-    private double[][] getTempArray(int size) {
-        if (tempArray == null) {
-            tempArray = new double[2][size];
-        } else if (tempArray[0].length < size) {
-            tempArray = new double[2][Math.max(tempArray.length * 3, size)];
+    private double[][] getTempArray(int size, boolean width) {
+        if (width) {
+            if (tempWArray == null) {
+                tempWArray = new double[2][size];
+            } else if (tempWArray[0].length < size) {
+                tempWArray = new double[2][Math.max(tempWArray.length * 3, size)];
+            }
+            return tempWArray;
+        } else {
+            if (tempHArray == null) {
+                tempHArray = new double[2][size];
+            } else if (tempHArray[0].length < size) {
+                tempHArray = new double[2][Math.max(tempHArray.length * 3, size)];
+            }
+            return tempHArray;
         }
-        return tempArray;
-
     }
-    private double[][] tempArray;
+    private double[][] tempWArray, tempHArray;
     private double getMinBaselineComplement() {
         if (Double.isNaN(minBaselineComplement)) {
             if (getAlignmentInternal().getVpos() == VPos.BASELINE) {
@@ -641,7 +670,7 @@ public class OBox extends Pane {
     }
 
     /**
-     * Whether or not resizable children will be resized to fill the full height of the OBox
+     * Whether resizable children will be resized to fill the full height of the OBox
      * or be resized to their preferred height and aligned according to the <code>alignment</code>
      * vpos value.   Note that if the OBox vertical alignment is set to BASELINE, then this
      * property will be ignored and children will be resized to their preferred heights.
@@ -685,7 +714,7 @@ public class OBox extends Pane {
 
 
     /**
-     * Whether or not resizable children will be resized to fill the full width of the OBox
+     * Whether resizable children will be resized to fill the full width of the OBox
      * or be resized to their preferred width and aligned according to the <code>alignment</code>
      * hpos value.   Note that if the OBox vertical alignment is set to BASELINE, then this
      * property will be ignored and children will be resized to their preferred widths.
@@ -719,7 +748,7 @@ public class OBox extends Pane {
         return fillWidth;
     }
 
-    private BooleanProperty fillWidth = new SimpleBooleanProperty(false);
+    private BooleanProperty fillWidth = new SimpleBooleanProperty(true);
     public final void setFillWidth(boolean value) { fillWidthProperty().set(value); }
     public final boolean isFillWidth() { return fillWidth == null || fillWidth.get(); }
 
@@ -775,49 +804,28 @@ public class OBox extends Pane {
         int adjustingNumber = 0;
 
         double[] usedAxis = areaWidths[0];
-        double[] temp = areaWidths[1];
+        double[] tempW = areaWidths[1];
         final boolean shouldFillHeight = shouldFillHeight();
 
         if (shrinking) {
             adjustingNumber = managed.size();
             for (int i = 0, size = managed.size(); i < size; i++) {
                 final Node child = managed.get(i);
-                temp[i] = computeChildMinAreaWidth(child, getMinBaselineComplement(), getMargin(child), height, shouldFillHeight);
+                tempW[i] = computeChildMinAreaWidth(child, getMinBaselineComplement(), getMargin(child), height, shouldFillHeight);
             }
         } else {
             for (int i = 0, size = managed.size(); i < size; i++) {
                 final Node child = managed.get(i);
                 if (getHGrow(child) == priority) {
-                    temp[i] = computeChildMaxAreaWidth(child, getMinBaselineComplement(), getMargin(child), height, shouldFillHeight);
+                    tempW[i] = computeChildMaxAreaWidth(child, getMinBaselineComplement(), getMargin(child), height, shouldFillHeight);
                     adjustingNumber++;
                 } else {
-                    temp[i] = -1;
+                    tempW[i] = -1;
                 }
             }
         }
 
-        double available = extraWidth;
-        outer:while (Math.abs(available) > 1 && adjustingNumber > 0) {
-            final double portion = snapPortionX(available / adjustingNumber);
-            for (int i = 0, size = managed.size(); i < size; i++) {
-                if (temp[i] == -1) {
-                    continue;
-                }
-                final double limit = temp[i] - usedAxis[i];
-                final double change = Math.abs(limit) <= Math.abs(portion)? limit : portion;
-                usedAxis[i] += change;
-                available -= change;
-                if (Math.abs(available) < 1) {
-                    break outer;
-                }
-                if (Math.abs(change) < Math.abs(portion)) {
-                    temp[i] = -1;
-                    adjustingNumber--;
-                }
-            }
-        }
-
-        return available;
+        return computeParimeterSnapping(true, extraWidth, adjustingNumber, managed.size(), tempW, usedAxis);
     }
     public static Priority getHGrow(Node child) {
         return (Priority)getConstraint(child, "obox-hgrow");
@@ -858,18 +866,11 @@ public class OBox extends Pane {
 
     private double snapPortionX(double value, boolean snapToPixel) {
         if (!snapToPixel || value == 0) return value;
-        double s = getSnapScaleX();
-        value *= s;
-        if (value > 0) {
-            value = Math.max(1, Math.floor(value + EPSILON));
-        } else {
-            value = Math.min(-1, Math.ceil(value - EPSILON));
-        }
-        return value / s;
+        return snapper(value, getSnapScaleX());
     }
 
     private double[][] getAreaHeights(List<Node> managed, double width) {
-        double[][] temp = getTempArray(managed.size());
+        double[][] tempH = getTempArray(managed.size(), false);
         final double insideWidth = width == -1? -1 : width -
                 snapSpaceX(getInsets().getLeft()) - snapSpaceX(getInsets().getRight());
         final boolean isFillWidth = isFillWidth();
@@ -877,12 +878,12 @@ public class OBox extends Pane {
             Node child = managed.get(i);
             Insets margin = getMargin(child);
             if (insideWidth != -1 && isFillWidth) {
-                temp[0][i] = computeChildPrefAreaHeight(child, margin, insideWidth);
+                tempH[0][i] = computeChildPrefAreaHeight(child, margin, insideWidth);
             } else {
-                temp[0][i] = computeChildPrefAreaHeight(child, margin, -1);
+                tempH[0][i] = computeChildPrefAreaHeight(child, margin, -1);
             }
         }
-        return temp;
+        return tempH;
     }
     private double adjustAreaHeights(List<Node>managed, double[][] areaHeights, double height, double width) {
         Insets insets = getInsets();
@@ -938,48 +939,27 @@ public class OBox extends Pane {
         int adjustingNumber = 0;
 
         double[] usedAxis = areaHeights[0];
-        double[] temp = areaHeights[1];
+        double[] tempH = areaHeights[1];
 
         if (shrinking) {
             adjustingNumber = managed.size();
             for (int i = 0, size = managed.size(); i < size; i++) {
                 final Node child = managed.get(i);
-                temp[i] = computeChildMinAreaHeight(child, getMargin(child), width);
+                tempH[i] = computeChildMinAreaHeight(child, getMargin(child), width);
             }
         } else {
             for (int i = 0, size = managed.size(); i < size; i++) {
                 final Node child = managed.get(i);
                 if (getVgrow(child) == priority) {
-                    temp[i] = computeChildMaxAreaHeight(child, getMargin(child), width);
+                    tempH[i] = computeChildMaxAreaHeight(child, getMargin(child), width);
                     adjustingNumber++;
                 } else {
-                    temp[i] = -1;
+                    tempH[i] = -1;
                 }
             }
         }
 
-        double available = extraHeight;
-        outer: while (Math.abs(available) > 1 && adjustingNumber > 0) {
-            final double portion = snapPortionY(available / adjustingNumber);
-            for (int i = 0, size = managed.size(); i < size; i++) {
-                if (temp[i] == -1) {
-                    continue;
-                }
-                final double limit = temp[i] - usedAxis[i];
-                final double change = Math.abs(limit) <= Math.abs(portion)? limit : portion;
-                usedAxis[i] += change;
-                available -= change;
-                if (Math.abs(available) < 1) {
-                    break outer;
-                }
-                if (Math.abs(change) < Math.abs(portion)) {
-                    temp[i] = -1;
-                    adjustingNumber--;
-                }
-            }
-        }
-
-        return available;
+        return computeParimeterSnapping(false, extraHeight, adjustingNumber, managed.size(), tempH, usedAxis);
     }
     double computeChildMaxAreaHeight(Node child, Insets margin, double width) {
         double max = child.maxHeight(-1);
@@ -1010,14 +990,7 @@ public class OBox extends Pane {
 
     private double snapPortionY(double value, boolean snapToPixel) {
         if (!snapToPixel || value == 0) return value;
-        double s = getSnapScaleY();
-        value *= s;
-        if (value > 0) {
-            value = Math.max(1, Math.floor(value + EPSILON));
-        } else {
-            value = Math.min(-1, Math.ceil(value - EPSILON));
-        }
-        return value / s;
+        return snapper(value, getSnapScaleY());
     }
 
     private static Object getConstraint(Node node, Object key) {
@@ -1025,6 +998,41 @@ public class OBox extends Pane {
             return node.getProperties().get(key);
         }
         return null;
+    }
+
+    private double snapper(double value, double scale) {
+        value *= scale;
+        if (value > 0) {
+            value = Math.max(1, Math.floor(value + EPSILON));
+        } else {
+            value = Math.min(-1, Math.ceil(value - EPSILON));
+        }
+        return value / scale;
+    }
+
+    private double computeParimeterSnapping(boolean x, double extraParimeter, double adjustingNumber, double managedSize, double[] ChildMinArea, double[] usedAxis) {
+        double available = extraParimeter;
+        outer:while (Math.abs(available) > 1 && adjustingNumber > 0) {
+            final double portion = x ? snapPortionX(available / adjustingNumber) : snapPortionY(available / adjustingNumber);
+            for (int i = 0; i < managedSize; i++) {
+                if (ChildMinArea[i] == -1) {
+                    continue;
+                }
+                final double limit = ChildMinArea[i] - usedAxis[i];
+                final double change = Math.abs(limit) <= Math.abs(portion)? limit : portion;
+                usedAxis[i] += change;
+                available -= change;
+                if (Math.abs(available) < 1) {
+                    break outer;
+                }
+                if (Math.abs(change) < Math.abs(portion)) {
+                    ChildMinArea[i] = -1;
+                    adjustingNumber--;
+                }
+            }
+        }
+
+        return available;
     }
 
     /*================================================================================================================*\
@@ -1075,8 +1083,7 @@ public class OBox extends Pane {
 
                     @Override
                     public boolean isSettable(OBox node) {
-                        return node.autoOrientate == null ||
-                                !node.autoOrientate.isBound();
+                        return !node.autoOrientate.isBound();
                     }
 
                     @Override
