@@ -17,7 +17,6 @@ import ui.skins.WindowBarSkin;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import static lib.WindowBarControl.*;
 
@@ -100,8 +99,8 @@ public class WindowBar extends Control {
 
     private EventHandler<MouseEvent> helpEvent = e -> {
         if (helpStage == null) {
-           // helpMissing.close();
-       //     helpMissing.show();
+            //helpMissing.close();
+            //helpMissing.show();
         } else if (!helpStage.isReturned()) {
             this.getScene().getWindow().hide();
             helpStage.returnableStart((Stage) this.getScene().getWindow());
@@ -159,10 +158,6 @@ public class WindowBar extends Control {
 
         helpEvent = eventHandler;
         setUserHelpable(isHelpable());
-    }
-
-    public void setSettingsEventHandler() {
-        // When settings button is added, DO same as above func here.
     }
 
     private void updateControls(boolean isExitable, boolean isMaxable, boolean isMinable, boolean isProgressable, boolean isHelpable, boolean  isMovable) {
@@ -369,5 +364,4 @@ public class WindowBar extends Control {
         return progressState;
     }
 
-    //todo make skin get controls using getter methods from this control. Then set the state using the getStates method. Then clean up and organise both classes.
 }

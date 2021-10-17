@@ -40,7 +40,6 @@ public class NexWindowBarSkin extends SkinBase<NexWindowBar> {
     protected void doDefaultLayouts(NexWindowBar control) {
         System.out.println("skin");
         control.getStyleClass().add("NexWindowBar");
-        control.getStylesheets().add("/CSS/windowBar.css");
 
         control.setMaxHeight(28.0);
         control.minWidth(0);

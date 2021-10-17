@@ -409,67 +409,6 @@ public class NexWindowBar extends Control {
     }*/
 
     /**
-     * Sets up some controls and styles things not styled from CSS. I.e. because they can't be.
-     * @return
-     */
-   /* protected void nexBuilder() {
-        this.getStyleClass().add("NexWindowBar");
-        this.getStylesheets().add("/CSS/windowBar.css");
-
-        this.setMaxHeight(28.0);
-        this.minWidth(0);
-        AnchorPane.setLeftAnchor(this, 0d);
-        AnchorPane.setTopAnchor(this, 0d);
-        AnchorPane.setRightAnchor(this, 0d);
-        AnchorPane.setBottomAnchor(this, null);
-
-        btnHelp.getStyleClass().add("window-button");
-        btnHelp.setId("window-help");
-        btnHelp.setText("?");
-        btnHelp.setTextFill(Color.WHITE);
-        AnchorPane.setBottomAnchor(btnHelp, 0D);
-        AnchorPane.setLeftAnchor(btnHelp, 0D);
-        AnchorPane.setTopAnchor(btnHelp, 0D);
-
-        progressState.setId("window-state");
-        progressState.setText("Set Me...");
-        AnchorPane.setBottomAnchor(progressState,5d);
-        AnchorPane.setLeftAnchor(progressState, 39d);
-        AnchorPane.setTopAnchor(progressState,5d);
-
-        progressBar.setId("window-progress");
-        AnchorPane.setBottomAnchor(progressBar,0d);
-        AnchorPane.setLeftAnchor(progressBar,28d);
-        AnchorPane.setTopAnchor(progressBar,26d);
-
-        btnMin.getStyleClass().add("window-button");
-        btnMin.setId("window-min");
-        btnMin.setText("_"); //_ Underscore
-        btnMin.setTextFill(Color.WHITE);
-        AnchorPane.setBottomAnchor(btnMin,0d);
-        AnchorPane.setRightAnchor(btnMin,56d);
-        AnchorPane.setTopAnchor(btnMin,0d);
-
-        btnMax.getStyleClass().add("window-button");
-        btnMax.setId("window-max");
-        btnMax.setText("\uD83D\uDDD6"); // □
-        btnMax.setTextFill(Color.WHITE);
-        AnchorPane.setBottomAnchor(btnMax, 0d);
-        AnchorPane.setRightAnchor(btnMax, 28d);
-        AnchorPane.setTopAnchor(btnMax, 0d);
-
-        btnExit.getStyleClass().add("window-button");
-        btnExit.setId("window-exit");
-        btnExit.setText("\u2715"); // ✕
-        btnExit.setTextFill(Color.WHITE);
-        AnchorPane.setBottomAnchor(btnExit, 0d);
-        AnchorPane.setRightAnchor(btnExit, 0d);
-        AnchorPane.setTopAnchor(btnExit, 0d);
-
-        super.getChildren().add(root);
-    }*/
-
-    /**
      * There are 3 configured ways of exiting:
      * WINDOW: Only closes the window/stage called from when set to this option.
      * JAVAFX: Exits the JavaFX runtime which will close all stages but leave none JavaFX dependant threads running.
