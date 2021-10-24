@@ -1,4 +1,4 @@
-package lib;
+package lib.enums;
 
 public enum WindowBarControl {
     PROGRESS_STATE,
@@ -6,5 +6,6 @@ public enum WindowBarControl {
     BUTTON_MIN,
     BUTTON_MAX,
     BUTTON_EXIT,
-    BUTTON_HELP
+    BUTTON_HELP,
+    BUTTON_SETTINGS
 }

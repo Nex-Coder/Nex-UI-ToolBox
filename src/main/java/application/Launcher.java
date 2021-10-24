@@ -1,19 +1,11 @@
 package application;
 
-import io.github.palexdev.materialfx.controls.MFXButton;
 import javafx.application.Application;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import lib.abstracts.NexStage;
 import ui.NexScene;
 import ui.NexStageBase;
-import ui.controls.NexWindowBar;
 import ui.controls.WindowBar;
-import ui.parents.OBox;
 
 /**
  * Essentially the bootstrap to kickstart the main start class.
@@ -35,17 +27,18 @@ class Launcher {
         public void start(Stage stg)  {
             NexStage stage = new NexStageBase(400, 250);
 
-            WindowBar pane = new WindowBar();
+            WindowBar w = new WindowBar(true, true, true, true, true, true, false);
 
-            pane.setBorder(new Border(new BorderStroke(Color.BLACK,
-                    BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
-
-            NexScene scene = new NexScene(pane);
+            NexScene scene = new NexScene(w);
             stage.setScene(scene);
             stage.show();
 
+            w.setHelpEventHandler(e -> {});
+            w.setUserHelpable(true);
+
             //pane.setEnabled(false);
             // look into tray stuff https://github.com/dustinkredmond/FXTrayIcon
+            // I did some research and the plugin abstracts AWT Tray logic for a JavaFX rendition. Best bet unless we use AWT raw.
         }
     }
 

@@ -5,59 +5,61 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
+import javafx.geometry.Orientation;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import lib.WindowBarControl;
-import lib.interfaces.StageReturnable;
+import lib.enums.WindowBarControl;
+import ui.parents.OBox;
 import ui.skins.WindowBarSkin;
-
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
-import static lib.WindowBarControl.*;
+import static lib.enums.WindowBarControl.*;
 
 public class WindowBar extends Control {
-    private Window stage; // Most cases this can be hard coded. But if a user changes the scene this will continue to work.
-    private double xOffset = 0;
-    private double yOffset = 0;
 
-    private double prevWidth;
-    private double prevHeight;
-    private double prevX;
-    private double prevY;
+    /*================================================================================================================*\
+    || Properties
+    \*================================================================================================================*/
+    private Window stage;
 
-    private final Button btnMin = new Button(), btnExit = new Button(), btnHelp = new Button(), btnMax = new Button();
+    private double xOffset, yOffset, prevWidth, prevHeight, prevX, prevY;
+
+
+    private final OBox leftGroup = new OBox(Orientation.HORIZONTAL), rightGroup = new OBox(Orientation.HORIZONTAL);
+    private final Button btnMin = new Button(), btnExit = new Button(), btnHelp = new Button(), btnMax = new Button(), btnSettings = new Button();
     private final ProgressBar progressBar = new ProgressBar();
     private final Label progressState = new Label();
 
+    private LinkedList<WindowBarControl> leftOrder, rightOrder;
+
+
     // States
-    private boolean isMaxable, isHelpable, isMovable, isProgressable, isExitable, isMinable;
+    private boolean isMinable = false, isMaxable = false, isExitable = false, isMovable = false,
+            isProgressable = false,
+            isHelpable = false, isSettingsable = false;
+
     private final BooleanProperty isMaximisedProperty = new SimpleBooleanProperty(false);
 
-    private NexWindowBar.ShutdownMethod shutdownMethod = NexWindowBar.ShutdownMethod.APPLICATION;
-    private final NexWindowBar.MinimiseMethod minimiseMethod = NexWindowBar.MinimiseMethod.ICON;
-
-    private StageReturnable<?> helpStage;
+    private ShutdownMethod shutdownMethod = ShutdownMethod.APPLICATION;
+    private final MinimiseMethod minimiseMethod = MinimiseMethod.ICON;
 
     // EventHandlers
     private final EventHandler<MouseEvent> preDragEvent = e -> {
         stage = this.getScene().getWindow();
         xOffset = e.getSceneX();
         yOffset = e.getSceneY();
-    };
-    private final EventHandler<MouseEvent> dragEvent = e -> {
+    }, dragEvent = e -> {
         stage.setX(e.getScreenX() - xOffset);
         stage.setY(e.getScreenY() - yOffset);
         isMaximisedProperty.set(false);
-    };
-
-    private final ChangeListener<Boolean> maxListener;
-
-    private final EventHandler<MouseEvent> maxEvent = e -> {
+    }, maxEvent = e -> {
         Window stage = this.getScene().getWindow();
         Rectangle2D bounds = Screen.getScreensForRectangle(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight()).get(0).getVisualBounds();
 
@@ -79,45 +81,88 @@ public class WindowBar extends Control {
             stage.setHeight(bounds.getHeight());
             isMaximisedProperty.set(true);
         }
-    };
-
-    private final EventHandler<MouseEvent> exitEvent = e -> {
+    }, exitEvent = e -> {
         // Maybe create an interface that supplies exit handling to make code cleaner?
         switch (shutdownMethod) {
             case WINDOW -> this.getScene().getWindow().hide();
             case JAVAFX ->  Platform.exit();
             case APPLICATION -> System.exit(0);
         }
-    };
-
-    private final EventHandler<MouseEvent> minEvent = e -> {
+    }, minEvent = e -> {
         switch (minimiseMethod) {
             case ICON -> ((Stage) this.getScene().getWindow()).setIconified(true);
             case TRAY -> ((Stage) this.getScene().getWindow()).setIconified(true); // TODO Dependant on completion of NexTrayPane (& a SendToTray Interface). Then finish constructors and test/docs
         }
     };
 
-    private EventHandler<MouseEvent> helpEvent = e -> {
-        if (helpStage == null) {
-            //helpMissing.close();
-            //helpMissing.show();
-        } else if (!helpStage.isReturned()) {
-            this.getScene().getWindow().hide();
-            helpStage.returnableStart((Stage) this.getScene().getWindow());
-        }
-    };
+    private EventHandler<MouseEvent> helpEvent, settingsEvent;
+
+    private final ChangeListener<Boolean> maxListener;
+
+    /*================================================================================================================*\
+    ||  Constructors
+    \*================================================================================================================*/
 
     public WindowBar() {
-        super();
-        maxListener = createMaxChangeListener();
-
-        setUserMinable(true);
-        setUserMaxable(true);
-        setUserExitable(true);
-        setUserHelpable(true);
-        setUserProgressable(true);
+        this(true, true, true, true, false, false, false);
     }
 
+    public WindowBar(boolean isMinable,
+                     boolean isMaxable,
+                     boolean isExitable,
+                     boolean isMovable,
+                     boolean isProgressable,
+                     boolean isHelpable,
+                     boolean isSettingsable) {
+        super();
+
+        maxListener = createMaxChangeListener();
+
+        setUserMoveable(isMovable);
+
+        this.isMinable = isMinable;
+        this.isMaxable = isMaxable;
+        this.isExitable = isExitable;
+        this.isProgressable = isProgressable;
+        this.isHelpable = isHelpable;
+        this.isSettingsable = isSettingsable;
+
+        btnMin.setOnMouseClicked(minEvent);
+        btnMax.setOnMouseClicked(maxEvent);
+        btnExit.setOnMouseClicked(exitEvent);
+        btnSettings.setOnMouseClicked(settingsEvent);
+        btnHelp.setOnMouseClicked(helpEvent);
+
+        setDefaultGroupOrders();
+    }
+
+    /*================================================================================================================*\
+    ||  Methods
+    \*================================================================================================================*/
+
+    /* Ordering */
+
+    public void sortGroup(boolean left) {
+        if (left) {
+            for (WindowBarControl windowBarControl : leftOrder) {
+                switch (windowBarControl) {
+                    case BUTTON_HELP -> btnHelp.toFront();
+                    case BUTTON_SETTINGS -> btnSettings.toFront();
+                }
+            }
+        } else {
+            for (WindowBarControl windowBarControl : rightOrder) {
+                switch (windowBarControl) {
+                    case BUTTON_MIN -> btnMin.toFront();
+                    case BUTTON_MAX -> btnMax.toFront();
+                    case BUTTON_EXIT -> btnExit.toFront();
+                }
+                System.out.println("sorted: " + windowBarControl);
+            }
+        }
+    }
+
+    /* Events & Listener */
     protected ChangeListener<Boolean> createMaxChangeListener() {
         return (obv, o, n) -> {
             Window stage = this.getScene().getWindow();
@@ -135,31 +180,23 @@ public class WindowBar extends Control {
         };
     }
 
-    @Override protected Skin<?> createDefaultSkin() {
-        return new WindowBarSkin(this) {};
-    }
-
-    public Map<WindowBarControl, Boolean> getStates() {
-        Map<WindowBarControl, Boolean> stateMap = new HashMap<>();
-        stateMap.put(BUTTON_MIN, isMinable);
-        stateMap.put(BUTTON_MAX, isMaxable);
-        stateMap.put(BUTTON_EXIT, isExitable);
-        stateMap.put(BUTTON_HELP, isHelpable);
-        stateMap.put(PROGRESS_BAR, isProgressable);
-        stateMap.put(PROGRESS_STATE, isProgressable);
-        return stateMap;
-    }
-
-
     public void setHelpEventHandler(EventHandler<MouseEvent> eventHandler) {
         try {
             btnHelp.removeEventHandler(MouseEvent.MOUSE_CLICKED, helpEvent);
         } catch (NullPointerException | IllegalArgumentException ignored) {}
 
         helpEvent = eventHandler;
-        setUserHelpable(isHelpable());
     }
 
+    public void setSettingsEventHandler(EventHandler<MouseEvent> eventHandler) {
+        try {
+            btnHelp.removeEventHandler(MouseEvent.MOUSE_CLICKED, settingsEvent);
+        } catch (NullPointerException | IllegalArgumentException ignored) {}
+
+        settingsEvent = eventHandler;
+    }
+
+    /* Node/Control States */
     private void updateControls(boolean isExitable, boolean isMaxable, boolean isMinable, boolean isProgressable, boolean isHelpable, boolean  isMovable) {
         setUserMoveable(isMovable);
         setUserMaxable(isMaxable);
@@ -179,7 +216,7 @@ public class WindowBar extends Control {
             this.setOnMousePressed(preDragEvent);
             this.setOnMouseDragged(dragEvent);
             isMovable = true;
-        } else if (!enable) {
+        } else if (!enable && isMovable) {
             this.removeEventHandler(MouseEvent.MOUSE_PRESSED, preDragEvent);
             this.removeEventHandler(MouseEvent.MOUSE_DRAGGED, dragEvent);
             isMovable = false;
@@ -192,59 +229,55 @@ public class WindowBar extends Control {
      * @param enable True to enable otherwise false to disable.
      */
     public void setUserMaxable(boolean enable) {
-        if (enable && !isMaxable) {
-            this.getChildren().add(btnMax);
-            btnMax.setOnMouseClicked(maxEvent);
-            isMaximisedProperty.addListener(maxListener);
-            isMaxable = true;
-        } else if (!enable) {
-            this.getChildren().remove(btnMax);
-            btnMax.removeEventHandler(MouseEvent.MOUSE_CLICKED, maxEvent);
-            isMaximisedProperty.removeListener(maxListener);
-            isMaxable = false;
-        }
+        isMaxable = setNodeEnabled(enable, isMaxable, BUTTON_MAX);
     }
 
     public void setUserExitable(boolean enable) {
-        if (enable && !isExitable) {
-            this.getChildren().add(btnExit);
-            btnExit.setOnMouseClicked(exitEvent);
-            isExitable = true;
-        } else if (!enable) {
-            this.getChildren().remove(btnExit);
-            btnExit.removeEventHandler(MouseEvent.MOUSE_CLICKED, exitEvent);
-            isExitable = false;
-        }
+        isExitable = setNodeEnabled(enable, isExitable, BUTTON_EXIT);
     }
 
     public void setUserMinable(boolean enable) {
-        if (enable && !isMinable) {
-            this.getChildren().add(btnMin);
-            btnMin.setOnMouseClicked(minEvent);
-            isMinable = true;
-        } else if (!enable) {
-            this.getChildren().remove(btnMin);
-            btnMin.removeEventHandler(MouseEvent.MOUSE_CLICKED, minEvent);
-            isMinable = false;
-        }
+        isMinable = setNodeEnabled(enable, isMinable, BUTTON_MIN);
     }
 
-    public void setUserHelpable(boolean enable) {
-        if (enable && !isHelpable) {
-            this.getChildren().add(btnHelp);
-            btnHelp.setOnMouseClicked(helpEvent);
-            isHelpable = true;
-        } else if (!enable) {
-            this.getChildren().remove(btnHelp);
-            btnHelp.removeEventHandler(MouseEvent.MOUSE_CLICKED, helpEvent);
-            isHelpable = false;
+    public void setUserHelpable(boolean enable) throws IllegalStateException {
+        isSettingsable = setNodeEnabled(enable, isHelpable, BUTTON_HELP);
+    }
+
+    public void setUserSettingsable(boolean enable) {
+        isSettingsable = setNodeEnabled(enable, isSettingsable, BUTTON_SETTINGS);
+    }
+
+    private boolean setNodeEnabled(boolean enable, boolean isEnabled, WindowBarControl nodeType) {
+        if (enable && !isEnabled) {
+            ((WindowBarSkin) getSkin()).setControlEnabled(nodeType, true);
+            sortGroup(false);
+            return true;
+        } else if (!enable && isEnabled) {
+            ((WindowBarSkin) getSkin()).setControlEnabled(nodeType, false);
+            return false;
         }
+        return isEnabled;
+    }
+
+    private boolean setNodeEnabled(boolean enable, boolean isEnabled, WindowBarControl nodeType, Node node, EventHandler<MouseEvent> event) {
+        if (enable && !isEnabled) {
+            ((WindowBarSkin) getSkin()).setControlEnabled(nodeType, true);
+            node.setOnMouseClicked(event);
+            sortGroup(false);
+            return true;
+        } else if (!enable && isEnabled) {
+            ((WindowBarSkin) getSkin()).setControlEnabled(nodeType, false);
+            node.removeEventHandler(MouseEvent.MOUSE_CLICKED, event);
+            return false;
+        }
+        return isEnabled;
     }
 
     /**
      * Allows the user to view any data that the has been appropriately bound. This will show a small progress bar and
      * status label. If false, the nodes are removed from the pane.
-     *
+     * <br><br>
      * Note when enabled: When this is enabled and its controls are visible, the visible parts may be covered by the
      * other buttons visible on this windowBar when resized to a width less than 256px. Either enforce a minimum
      * scene/stage width of 256px or disable resizing.
@@ -252,12 +285,83 @@ public class WindowBar extends Control {
      */
     public void setUserProgressable(boolean enable) {
         if (enable && !isProgressable) {
-            this.getChildren().addAll(progressBar, progressState);
+            getChildren().addAll(progressBar, progressState);
             isProgressable = true;
-        } else if (!enable) {
-            this.getChildren().removeAll(progressBar, progressState);
+        } else if (!enable && isProgressable) {
+            getChildren().removeAll(progressBar, progressState);
             isProgressable = false;
         }
+    }
+    /* Restore Defaults */
+    public void setDefaultGroupOrders() {
+        leftOrder = new LinkedList<>();
+        leftOrder.add(BUTTON_SETTINGS); leftOrder.add(BUTTON_HELP);
+
+        rightOrder = new LinkedList<>();
+        rightOrder.add(BUTTON_MIN); rightOrder.add(BUTTON_MAX); rightOrder.add(BUTTON_EXIT);
+    }
+
+    public void setDefaultMinEvent() {
+        btnMin.setOnMouseClicked(minEvent);
+    }
+
+    public void setDefaultMaxEvent() {
+        btnMax.setOnMouseClicked(maxEvent);
+    }
+
+    public void setDefaultExitEvent() {
+        btnExit.setOnMouseClicked(exitEvent);
+    }
+
+    public void setDefaultHelpEvent() {
+        btnHelp.setOnMouseClicked(helpEvent);
+    }
+
+    public void setDefaultSettingsEvent() {
+        btnSettings.setOnMouseClicked(settingsEvent);
+    }
+
+    /* Overrides */
+    @Override protected Skin<?> createDefaultSkin() {
+        WindowBarSkin skin = new WindowBarSkin(this) {};
+
+        return skin;
+    }
+
+    /*================================================================================================================*\
+    ||  Getters & Setters (No Functionality)
+    \*================================================================================================================*/
+
+    public Button getButtonMin() {
+        return btnMin;
+    }
+
+    public Button getButtonMax() {
+        return btnMax;
+    }
+
+    public Button getButtonExit() {
+        return btnExit;
+    }
+
+    public Button getButtonHelp() {
+        return btnHelp;
+    }
+
+    public Button getButtonSettings() {
+        return btnSettings;
+    }
+
+    public ProgressBar getProgressBar() {
+        return progressBar;
+    }
+
+    public OBox getLeftGroup() { return leftGroup; }
+
+    public OBox getRightGroup() { return rightGroup; }
+
+    public Label getProgressState() {
+        return progressState;
     }
 
     /**
@@ -285,10 +389,16 @@ public class WindowBar extends Control {
     public boolean isMaximized() { return isMaximisedProperty.get(); }
 
     /**
-     * States if the stage is is movable.
+     * States if the stage is movable.
      * @return True for user movable stage controls, false otherwise.
      */
     public boolean isMovable() { return isMovable; }
+
+    /**
+     * States if the stage is settings-able.
+     * @return True for user movable stage controls, false otherwise.
+     */
+    public boolean isSettingsable() { return isSettingsable; }
 
     /**
      * States if the progress display is toggled.
@@ -296,30 +406,38 @@ public class WindowBar extends Control {
      */
     public boolean isProgressable() { return isProgressable;  }
 
+    public Map<WindowBarControl, Boolean> getStates() {
+        Map<WindowBarControl, Boolean> stateMap = new HashMap<>();
+        stateMap.put(BUTTON_MIN, isMinable);
+        stateMap.put(BUTTON_MAX, isMaxable);
+        stateMap.put(BUTTON_EXIT, isExitable);
+        stateMap.put(BUTTON_HELP, isHelpable);
+        stateMap.put(BUTTON_SETTINGS, isSettingsable);
+        stateMap.put(PROGRESS_BAR, isProgressable);
+        stateMap.put(PROGRESS_STATE, isProgressable);
+        return stateMap;
+    }
+
     /**
      * Retrieves the shutdown method for the exit button assigned to this window bar.
      * @return The shutdown method.
      */
-    public NexWindowBar.ShutdownMethod getShutdownMethod() { return shutdownMethod; }
+    public ShutdownMethod getShutdownMethod() { return shutdownMethod; }
 
     /**
      * Sets the shutdown method for the exit button assigned to this window bar.
      * The shutdown methods act af follows:
-     * - WINDOW: Only closes the window/stage called from when set to this option.
-     * - JAVAFX: Exits the JavaFX runtime which will close all stages but leave none JavaFX dependant threads running.
-     * - APPLICATION: Shutdowns the entire application system. All threads will terminate regardless.
+     * <ul>
+     * <li> WINDOW: Only closes the window/stage called from when set to this option. </li>
+     * <li> JAVAFX: Exits the JavaFX runtime which will close all stages but leave none JavaFX dependant threads running. </li>
+     * <li> APPLICATION: Shutdowns the entire application system. All threads will terminate regardless. </li>
+     * </ul>
      */
-    public void setShutdownMethod(NexWindowBar.ShutdownMethod method) { this.shutdownMethod = method; }
+    public void setShutdownMethod(ShutdownMethod method) { this.shutdownMethod = method; }
 
-    /**
-     * Sets the returnable Stage to set when the user presses the help button if enabled.
-     * Changes are only visable if the help menu isn't already shown.
-     * @param helpStage The stage implementing the StageReturnable interface of any type.
-     */
-    public void setHelpStage(StageReturnable<?> helpStage) {
-        this.helpStage = helpStage;
-
-    }
+    /*================================================================================================================*\
+    || Enum
+    \*================================================================================================================*/
 
     /**
      * There are 3 configured ways of exiting:
@@ -337,31 +455,6 @@ public class WindowBar extends Control {
         ICON,
         TRAY,
         THEABISWHERENOTHINGRETURNSFROM
-    }
-
-
-    public Button getButtonMin() {
-        return btnMin;
-    }
-
-    public Button getButtonMax() {
-        return btnMax;
-    }
-
-    public Button getButtonExit() {
-        return btnExit;
-    }
-
-    public Button getButtonHelp() {
-        return btnHelp;
-    }
-
-    public ProgressBar getProgressBar() {
-        return progressBar;
-    }
-
-    public Label getProgressState() {
-        return progressState;
     }
 
 }
