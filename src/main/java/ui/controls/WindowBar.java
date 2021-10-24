@@ -41,9 +41,7 @@ public class WindowBar extends Control {
 
 
     // States
-    private boolean isMinable = false, isMaxable = false, isExitable = false, isMovable = false,
-            isProgressable = false,
-            isHelpable = false, isSettingsable = false;
+    private boolean isMinable, isMaxable, isExitable, isMovable = false, isProgressable, isHelpable, isSettingsable;
 
     private final BooleanProperty isMaximisedProperty = new SimpleBooleanProperty(false);
 
@@ -241,7 +239,7 @@ public class WindowBar extends Control {
     }
 
     public void setUserHelpable(boolean enable) throws IllegalStateException {
-        isSettingsable = setNodeEnabled(enable, isHelpable, BUTTON_HELP);
+        isHelpable = setNodeEnabled(enable, isHelpable, BUTTON_HELP);
     }
 
     public void setUserSettingsable(boolean enable) {
